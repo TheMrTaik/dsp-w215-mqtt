@@ -5,7 +5,8 @@
   "main": "app.js",
   "dependencies": {
     "then-request": "latest",
-    "xmldom": "^0.1.19"
+    "xmldom": "^0.1.19",
+    "mqtt": "latest"
   },
   "devDependencies": {},
   "scripts": {
