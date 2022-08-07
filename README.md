@@ -1,4 +1,4 @@
-# DSP-Q215-MQTT 
+# DSP-W215 MQTT 
 Tool to Allow control of D-Link DSP-W215 Smart Plug via MQTT.
 
 You must change the authentication credentials (PIN written behind the plug and IP address) of the smart plug present in the app.js file and the connection parameters to the MQTT broker, always present in the same file.
