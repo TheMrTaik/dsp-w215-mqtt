@@ -1,7 +1,7 @@
 {
-  "name": "hnap",
-  "version": "2.1.0",
-  "description": "Reads power consumption and temperature from D-Link DSP-W215",
+  "name": "DSP-W215-MQTT",
+  "version": "1.0",
+  "description": "Allow control of D-Link DSP-W215 Smart Plug via MQTT",
   "main": "app.js",
   "dependencies": {
     "then-request": "latest",
@@ -10,12 +10,13 @@
   },
   "devDependencies": {},
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
   },
   "repository" :
   { "type" : "git"
-  , "url" : "https://github.com/bikerp/dsp-w215-hnap.git"
+  , "url" : "https://github.com/TheMrTaik/dsp-w215-mqtt.git"
   },
-  "author": "bikerp",
+  "author": "TheMrTaik",
   "license": "MIT"
 }
