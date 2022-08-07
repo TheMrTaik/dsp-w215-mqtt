@@ -21,6 +21,10 @@ const host = '<IP_OF_MQTT_BROKER>'
 const port = '1883'
 const clientID = 'DSP-W215'
 const subTopic = 'cmnd/DSP-W215'
+var pubTopicStat = 'stat/DSP-W215'
+var pubTopicPower = 'stat/DSP-W215/POWER'
+var pubTopicTotPower = 'stat/DSP-W215/TOT_POWER'
+var pubTopicTemperature = 'stat/DSP-W215/TEMPERATURE'
 
 //Connessione MQTT
 const connectURL = `mqtt://${host}:${port}`
@@ -37,7 +41,7 @@ const client = mqtt.connect(connectURL, {
 //Sub Topic
 client.on('connect', () => {
         console.log('Connected')
-        client.subscribe([subTopic], () => {
+        client.subscribe(subTopic, () => {
                 console.log(`Subscribe to topic '${subTopic}'`)
         })
 })
@@ -48,63 +52,89 @@ var messaggio = "null";
 client.on('message', (topic, payload) => {
 //      console.log('Received Message:', topic, payload.toString())
         messaggio = payload.toString();
-        console.log(`Var impostata a '${messaggio}'`)
+        console.log(`Ricevuto Comando: '${messaggio}'`)
 
-        //Accensione
-        if(messaggio == "ON") {
-                soapclient.on();
-        }
+        //Soap Login
+        soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
+                if(!status) {
+                        console.log("Login Failed!")
+                }
 
-        //Spegnimento
-        if(messaggio == "OFF") {
-                soapclient.off();
-        }
+                if(status != "success") {
+                        console.log("Login Failed!")
+                }
+
+                if(status == "success") {
+                        console.log("Login OK")
+//              }
+//      });
+
+                        //Accensione
+                        if(messaggio == "ON") {
+                                soapclient.on();
+                        }
+
+                        //Spegnimento
+                        if(messaggio == "OFF") {
+                                soapclient.off();
+                        }
+
+                        //Aggiorna Stato se il comando è ON o OFF
+                        if(messaggio == "ON" || messaggio == "OFF") {
+                                setTimeout(function(){
+                                        soapclient.state().done(function(state) {
+                                                if(state == "true") {
+                                                        client.publish(pubTopicStat, "ON")
+                                                        console.log("Inviato Stat ON")
+                                                } else {
+                                                        client.publish(pubTopicStat, "OFF")
+                                                        console.log("Inviato Stat OFF")
+                                                }
+                                        });
+                                }, 1000);
+                        }
+
+                        //Richiesta Aggiornamento Generale
+                        if(messaggio == "UPDATE_DATA"){
+                                //Stato
+                                soapclient.state().done(function(state) {
+                                        if(state == "true") {
+                                                client.publish(pubTopicStat, "ON")
+                                                console.log("Stato: ON")
+                                        } else {
+                                                client.publish(pubTopicStat, "OFF")
+                                                console.log("Stato: OFF")
+                                        }
+                                });
+
+                                //Consumo Attuale
+                                soapclient.consumption().done(function(power) {
+                                        client.publish(pubTopicPower, power)
+                                        console.log('Consumo Attuale: ', power);
+                                });
+
+                                //Consumo Totale
+                                soapclient.totalConsumption().done(function(power) {
+                                        client.publish(pubTopicTotPower, power)
+                                        console.log('Consumo Totale Periodo: ', power);
+                                });
+
+                                //Temperature Presa
+                                soapclient.temperature().done(function(temperature) {
+                                        client.publish(pubTopicTemperature, temperature)
+                                        console.log('Temperatura Attuale: ', temperature);
+                                });
+                        }
+                }
+        });
 })
 
-var args = process.argv.slice(2);
-
-soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
-        if (!status) {
-                throw "Login failed!";
-        }
-
-        if (status != "success") {
-                throw "Login failed!";
-        }
-
-        //Accensione
-        if(args == "ON") {
-                soapclient.on();
-        }
-
-        //Spegnimento
-        if(args == "OFF") {
-                soapclient.off();
-        }
-
-        //Stato Presa
-        if(args == "STATE") {
-                soapclient.state().done(function(state) {
-                        if(state == "true") {
-                                console.log("ON");
-                        } else {
-                                console.log("OFF");
-                        }
-                });
-        }
-
-        //Consumo Attuale
-        if(args == "POWER") {
-                soapclient.consumption().done(function(power) { console.log(power); });
-        }
-
-        //Consumo Totale
-        if(args == "TOTAL_POWER") {
-                soapclient.totalConsumption().done(function(power) { console.log(power); });
-        }
-
-        //Temperatura Presa
-        if(args == "TEMP") {
-                soapclient.temperature().done(function(temperature) { console.log(temperature); });
-        }
-});
+//soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
+//      if (!status) {
+//              throw "Login failed!";
+//      }
+//
+//      if (status != "success") {
+//              throw "Login failed!";
+//      }
+//});
